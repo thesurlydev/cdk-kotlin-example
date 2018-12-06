@@ -17,18 +17,21 @@ repositories {
     mavenCentral()
 }
 
+val cdkVersion = "0.19.0"
+val sdkVersion = "2.1.3"
+
 dependencies {
     compile(kotlin("stdlib-jdk8"))
 
     // cdk
-    implementation("software.amazon.awscdk:cdk:0.19.0")
-    implementation("software.amazon.awscdk:iam:0.19.0")
-    implementation("software.amazon.awscdk:lambda:0.19.0")
-    implementation("software.amazon.awscdk:s3:0.19.0")
-    implementation("software.amazon.awscdk:stepfunctions:0.19.0")
+    implementation("software.amazon.awscdk:cdk:${cdkVersion}")
+    implementation("software.amazon.awscdk:iam:${cdkVersion}")
+    implementation("software.amazon.awscdk:lambda:${cdkVersion}")
+    implementation("software.amazon.awscdk:s3:${cdkVersion}")
+    implementation("software.amazon.awscdk:stepfunctions:${cdkVersion}")
 
     // sdk
-    implementation("software.amazon.awssdk:lambda:2.1.3")
+    implementation("software.amazon.awssdk:lambda:${sdkVersion}")
 
     // test
     testImplementation("junit:junit:4.12")

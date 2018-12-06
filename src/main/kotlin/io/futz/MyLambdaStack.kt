@@ -33,8 +33,7 @@ class MyLambdaStack @JvmOverloads constructor(
         val taskName = "$namespace-hello-task"
 
         // TODO required?
-        val lambdaRole = Role(
-            this, roleName, RoleProps.builder()
+        val lambdaRole = Role(this, roleName, RoleProps.builder()
                 .withAssumedBy(ServicePrincipal("lambda.amazonaws.com"))
                 .withManagedPolicyArns(Arrays.asList("arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"))
                 .build()
