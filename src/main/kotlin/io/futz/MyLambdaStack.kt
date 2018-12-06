@@ -17,55 +17,49 @@ import software.amazon.awscdk.services.stepfunctions.Task
 import software.amazon.awscdk.services.stepfunctions.TaskProps
 import java.util.*
 
-class MyLambdaStack @JvmOverloads constructor(
-    parent: App,
-    name: String,
-    localCodePath: String,
-    props: StackProps? = null
+class MyLambdaStack @JvmOverloads constructor(parent: App,
+                                              name: String,
+                                              localCodePath: String,
+                                              props: StackProps? = null
 ) : Stack(parent, name, props) {
+  init {
 
-    init {
+    val namespace = "futz"
+    val roleName = "$namespace-role"
+    val funcName = "$namespace-func"
+    val stateMachineName = "$namespace-sm"
+    val taskName = "$namespace-hello-task"
 
-        val namespace = "futz"
-        val roleName = "$namespace-role"
-        val funcName = "$namespace-func"
-        val stateMachineName = "$namespace-sm"
-        val taskName = "$namespace-hello-task"
+    val lambdaRole = Role(this, roleName, RoleProps.builder()
+      .withAssumedBy(ServicePrincipal("lambda.amazonaws.com"))
+      .withManagedPolicyArns(Arrays.asList("arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"))
+      .build()
+    )
 
-        // TODO required?
-        val lambdaRole = Role(this, roleName, RoleProps.builder()
-                .withAssumedBy(ServicePrincipal("lambda.amazonaws.com"))
-                .withManagedPolicyArns(Arrays.asList("arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"))
-                .build()
-        )
+    // "build/libs/app.zip"
+    val code = Code.asset(localCodePath)
 
-        // "build/libs/app.zip"
-        val code = Code.asset(localCodePath)
+    val func = Function(this, funcName, FunctionProps.builder()
+      .withFunctionName(funcName)
+      .withCode(code)
+      .withHandler("io.futz.MyFunctionKt::handle")
+      .withMemorySize(256)
+      .withTimeout(60)
+      .withRole(lambdaRole)
+      .withRuntime(JAVA8)
+      .build()
+    )
 
-        val func = Function(
-            this, funcName, FunctionProps.builder()
-                .withFunctionName(funcName)
-                .withCode(code)
-                .withHandler("io.futz.MyFunctionKt::handle")
-                .withMemorySize(256)
-                .withTimeout(60)
-                .withRole(lambdaRole)
-                .withRuntime(JAVA8)
-                .build()
-        )
+    val helloTask = Task(this, taskName, TaskProps.builder()
+      .withResource(func)
+      .build()
+    )
 
-        val helloTask = Task(
-            this, taskName, TaskProps.builder()
-                .withResource(func)
-                .build()
-        )
-
-        StateMachine(
-            this, stateMachineName, StateMachineProps.builder()
-                .withStateMachineName(stateMachineName)
-                .withTimeoutSec(60)
-                .withDefinition(helloTask)
-                .build()
-        )
-    }
+    StateMachine(this, stateMachineName, StateMachineProps.builder()
+      .withStateMachineName(stateMachineName)
+      .withTimeoutSec(60)
+      .withDefinition(helloTask)
+      .build()
+    )
+  }
 }

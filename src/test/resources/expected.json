@@ -1,0 +1,116 @@
+{
+  "Parameters" : {
+    "futzfuncCodeS3VersionKey696538F6" : {
+      "Type" : "String",
+      "Description" : "S3 key for asset version \"test/futz-func/Code\""
+    },
+    "futzfuncCodeS3BucketBA8096A2" : {
+      "Type" : "String",
+      "Description" : "S3 bucket for asset \"test/futz-func/Code\""
+    }
+  },
+  "Resources" : {
+    "futzsmRole4B07AC2A" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [ {
+            "Action" : "sts:AssumeRole",
+            "Effect" : "Allow",
+            "Principal" : {
+              "Service" : {
+                "Fn::Join" : [ "", [ "states.", {
+                  "Ref" : "AWS::Region"
+                }, ".amazonaws.com" ] ]
+              }
+            }
+          } ]
+        }
+      }
+    },
+    "futzrole0400489C" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole" ],
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [ {
+            "Action" : "sts:AssumeRole",
+            "Effect" : "Allow",
+            "Principal" : {
+              "Service" : "lambda.amazonaws.com"
+            }
+          } ]
+        }
+      }
+    },
+    "futzfunc517F7A24" : {
+      "Type" : "AWS::Lambda::Function",
+      "DependsOn" : [ "futzrole0400489C" ],
+      "Properties" : {
+        "Role" : {
+          "Fn::GetAtt" : [ "futzrole0400489C", "Arn" ]
+        },
+        "FunctionName" : "futz-func",
+        "MemorySize" : 256,
+        "Runtime" : "java8",
+        "Timeout" : 60,
+        "Handler" : "io.futz.MyFunctionKt::handle",
+        "Code" : {
+          "S3Bucket" : {
+            "Ref" : "futzfuncCodeS3BucketBA8096A2"
+          },
+          "S3Key" : {
+            "Fn::Join" : [ "", [ {
+              "Fn::Select" : [ 0, {
+                "Fn::Split" : [ "||", {
+                  "Ref" : "futzfuncCodeS3VersionKey696538F6"
+                } ]
+              } ]
+            }, {
+              "Fn::Select" : [ 1, {
+                "Fn::Split" : [ "||", {
+                  "Ref" : "futzfuncCodeS3VersionKey696538F6"
+                } ]
+              } ]
+            } ] ]
+          }
+        }
+      }
+    },
+    "futzsmB920EF37" : {
+      "Type" : "AWS::StepFunctions::StateMachine",
+      "Properties" : {
+        "DefinitionString" : {
+          "Fn::Join" : [ "", [ "{\"StartAt\":\"futz-hello-task\",\"States\":{\"futz-hello-task\":{\"End\":true,\"Type\":\"Task\",\"Resource\":\"", {
+            "Fn::GetAtt" : [ "futzfunc517F7A24", "Arn" ]
+          }, "\"}},\"TimeoutSeconds\":60}" ] ]
+        },
+        "StateMachineName" : "futz-sm",
+        "RoleArn" : {
+          "Fn::GetAtt" : [ "futzsmRole4B07AC2A", "Arn" ]
+        }
+      }
+    },
+    "futzsmRoleDefaultPolicy29FB51A9" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "futzsmRoleDefaultPolicy29FB51A9",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [ {
+            "Action" : "lambda:InvokeFunction",
+            "Resource" : {
+              "Fn::GetAtt" : [ "futzfunc517F7A24", "Arn" ]
+            },
+            "Effect" : "Allow"
+          } ]
+        },
+        "Roles" : [ {
+          "Ref" : "futzsmRole4B07AC2A"
+        } ]
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 package io.futz
 
 class MyFunction {
-    fun handle(name: String): String = "Hello $name"
+  fun handle(name: String): String = "Hello, $name"
 }
