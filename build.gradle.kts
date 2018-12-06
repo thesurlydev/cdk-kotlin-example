@@ -10,7 +10,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "4.0.3"
 }
 
-group = "com.myorg"
+group = "io.futz"
 version = "1.0-SNAPSHOT"
 
 repositories {
